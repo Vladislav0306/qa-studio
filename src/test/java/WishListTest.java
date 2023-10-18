@@ -6,11 +6,12 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.time.Duration;
 
+import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$x;
-import static com.codeborne.selenide.Selenide.open;
+import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.Selenide.switchTo;
 
-public class AddingProductsToTheWishListTest {
+public class WishListTest {
     @BeforeEach
     void setUp() {
         open("https://testqastudio.me/");
@@ -211,5 +212,102 @@ public class AddingProductsToTheWishListTest {
         $x("//*[@class=\"wishlist-icon\"]").click();
         $x("//*[@class=\"remove remove_from_wishlist\"]").click();
         $x("//*[@src=\"https://testqastudio.me/wp-content/uploads/2021/04/f713-570x684.jpg\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldNotHave();
+    }
+
+    @Test
+    @DisplayName("88. Публикация списка желаний")
+    public void postingAWishList() {
+        $x("//*[@href=\"?add_to_wishlist=11338\"]").click();
+        $x("//*[@class=\"wishlist-icon\"]").click();
+        $x("//*[@class=\"fa fa-facebook\"]").click();
+        switchTo().window(1);
+        $x("//*[@id=\"homelink\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("Facebook"));
+        switchTo().window(0);
+        $x("//*[@class=\"fa fa-twitter\"]").click();
+        switchTo().window(2);
+        $x("//*[@class=\"css-901oao css-16my406 r-poiln3 r-bcqeeo r-qvutc0\"]").shouldBe(visible, Duration.ofSeconds(120)).shouldHave(exactText("Вход в X"));
+        switchTo().window(0);
+        $x("//*[@class=\"fa fa-pinterest\"]").click();
+        switchTo().window(3);
+        $x("//*[@class=\"lH1 dyH iFc H2s bwj c8S zDA\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("Pinterest"));
+        switchTo().window(0);
+        $x("//*[@class=\"fa fa-envelope-o\"]").click();
+        $x("//*[@class=\"fa fa-envelope-o\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave();
+        $x("//*[@class=\"fa fa-whatsapp\"]").click();
+        switchTo().window(4);
+        $x("//*[@class=\"landing-headerTitle\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("WhatsApp Web"));
+        switchTo().window(0);
+        $x("//*[@class=\"remove remove_from_wishlist\"]").click();
+        // Обнаружен баг: https://github.com/Vladislav0306/qa-studio/issues/21
+    }
+
+    @Test
+    @DisplayName("89. Редактирование заголовка")
+    public void editingTheTitle() {
+        $x("//*[@href=\"?add_to_wishlist=11338\"]").click();
+        $x("//*[@class=\"wishlist-icon\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").click();
+        $x("//*[@value=\"Список желаний\"]").setValue("Список желаний1");
+        $x("//*[@class=\"fa fa-check\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("Список желаний1 Редактировать заголовок"));
+        $x("//*[@class=\"remove remove_from_wishlist\"]").click();
+    }
+
+    @Test
+    @DisplayName("90. Создание пустого заголовка")
+    public void creatingAnEmptyHeader() {
+        $x("//*[@href=\"?add_to_wishlist=11338\"]").click();
+        $x("//*[@class=\"wishlist-icon\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").click();
+        $x("//*[@value=\"Список желаний\"]").setValue("");
+        $x("//*[@class=\"fa fa-check\"]").click();
+        $x("//*[@class=\"fa fa-check\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave();
+        $x("//*[@class=\"remove remove_from_wishlist\"]").click();
+    }
+
+    @Test
+    @DisplayName("91. Создание заголовка из цифр")
+    public void creatingAHeaderFromNumbers() {
+        $x("//*[@href=\"?add_to_wishlist=11338\"]").click();
+        $x("//*[@class=\"wishlist-icon\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").click();
+        $x("//*[@value=\"Список желаний\"]").setValue("12345");
+        $x("//*[@class=\"fa fa-check\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("12345 Редактировать заголовок"));
+        $x("//*[@class=\"remove remove_from_wishlist\"]").click();
+    }
+
+    @Test
+    @DisplayName("92. Создание заголовка из спецсимволов")
+    public void creatingAHeaderFromSpecialCharacters() {
+        $x("//*[@href=\"?add_to_wishlist=11338\"]").click();
+        $x("//*[@class=\"wishlist-icon\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").click();
+        $x("//*[@value=\"Список желаний\"]").setValue("~!@#$<>");
+        $x("//*[@class=\"fa fa-check\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("~!@#$ Редактировать заголовок"));
+        $x("//*[@class=\"remove remove_from_wishlist\"]").click();
+    }
+    @Test
+    @DisplayName("93. SQL-инъекция в поле ввода заголовка")
+    public void SQLInjectionInTheHeaderInputField() {
+        $x("//*[@href=\"?add_to_wishlist=11338\"]").click();
+        $x("//*[@class=\"wishlist-icon\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").click();
+        $x("//*[@value=\"Список желаний\"]").setValue("1 or sleep(5)#");
+        $x("//*[@class=\"fa fa-check\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("1 or sleep(5)# Редактировать заголовок"));
+        $x("//*[@class=\"remove remove_from_wishlist\"]").click();
+    }
+
+    @Test
+    @DisplayName("94. Отмена редактирования заголовка")
+    public void cancelingTitleEditing() {
+        $x("//*[@href=\"?add_to_wishlist=11338\"]").click();
+        $x("//*[@class=\"wishlist-icon\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").click();
+        $x("//*[@class=\"fa fa-remove\"]").click();
+        $x("//*[@class=\"wishlist-title wishlist-title-with-form\"]").shouldBe(visible, Duration.ofSeconds(11)).shouldHave(exactText("Список желаний Редактировать заголовок"));
+        $x("//*[@class=\"remove remove_from_wishlist\"]").click();
     }
 }
